@@ -2,6 +2,34 @@
 
 A powerful CLI tool for managing git worktrees with ease.
 
+## Motivation: Testing Cursor Multi-Agent Results
+
+**otree** was created to solve a specific workflow challenge with **Cursor's multi-agent mode**. When you run Cursor's multi-agent feature, it spawns multiple agent instances, each working on the same problem in parallel. These agents create different solutions, and you need to test them side-by-side to determine which one works best.
+
+The problem? There was no clear way to test the different solutions side-by-side. **otree** streamlines this entire process, letting you:
+
+- Run dev servers for all multi-agent worktrees simultaneously
+- Access each solution via unique localhost URLs with a single click
+- Quickly compare implementations side-by-side
+- Identify which worktree produced the best result
+- Apply the winning changes back in Cursor with confidence
+
+### Cursor Multi-Agent Workflow
+
+Here's how to use **otree** with Cursor's multi-agent mode:
+
+1. **Run a Cursor multi-agent run** on your task/problem
+
+2. **Run `otree run`** and select the relevant worktrees (the ones Cursor created for the multi-agent run)
+
+3. **The terminal extracts and outputs the localhost URLs** - click each one at a time to test the different solutions in your browser
+
+4. **See in your terminal which worktree corresponds to the port** you tested - when you find the best solution, note which worktree/branch it came from
+
+5. **In Cursor, identify this worktree and click "Apply Changes"** to merge the winning solution into your main branch
+
+This workflow transforms multi-agent testing from a slow, manual process into a fast, parallel comparison experience. You can have 3, 5, or even more solutions running simultaneously, each accessible with a single click.
+
 ## Features
 
 - 📁 **List all worktrees** with detailed information
@@ -64,15 +92,18 @@ otree run --all --command "pnpm dev" --route /pitchdeck/1
 ```
 
 **Interactive mode:**
+
 - Worktrees are unchecked by default - select the ones you want to run
 - Choose from saved commands or enter a new one
 - Choose from saved routes or skip
 
 **Quick shortcuts:**
+
 - `-dc` flag: Use your default command (no need to type it)
 - `-a` or `--all`: Run in all worktrees automatically
 
 **Smart output:**
+
 - Output is **intelligently filtered** to show only important information:
   - ✅ URLs (like `localhost:3000`) - highlighted in green
   - ⚠️ Errors and warnings - highlighted in red
@@ -83,6 +114,7 @@ otree run --all --command "pnpm dev" --route /pitchdeck/1
 - A summary shows all running services with their URLs
 
 **Example output:**
+
 ```
 🚀 Running "pnpm dev" in 3 worktree(s)...
 
@@ -96,6 +128,7 @@ otree run --all --command "pnpm dev" --route /pitchdeck/1
 ```
 
 **With route option (`--route /pitchdeck/1`):**
+
 ```
 🚀 Running "pnpm dev" in 3 worktree(s)...
 
@@ -135,11 +168,30 @@ otree run --all --command "pnpm dev" --route /pitchdeck/1
 
 Note: Only important lines are shown (URLs, errors, ready messages). Verbose build logs are hidden. Use `--verbose` flag to see all output.
 
-#### Route Option
+#### Route Option: Testing Specific Pages
 
-The `--route` or `-r` flag allows you to specify a route that will be displayed alongside the base URLs. This is incredibly useful when you're developing a specific page and want quick access to it across all worktrees.
+The `--route` or `-r` flag is a game-changer when testing specific pages or features across multiple worktrees. Instead of manually navigating to the page you're testing in each browser tab, **otree** automatically constructs and displays the full URL for that specific route.
+
+**Why is this useful?**
+
+When you're working on a specific page (e.g., `/pitchdeck/1` or `/dashboard/settings`), you don't want to test the homepage - you want to test _that exact page_. The route option:
+
+1. **Saves time**: No need to manually navigate to the page in each browser tab
+2. **Reduces errors**: Ensures you're testing the exact same route in each worktree
+3. **Perfect for Cursor multi-agent testing**: When comparing multiple AI-generated solutions, you want to see how each one handles the specific page/feature, not the homepage
+4. **One-click testing**: Just click the route URL from the terminal summary and immediately see that specific page
+
+**How it works:**
+
+When you specify a route like `/pitchdeck/1`, otree:
+
+1. Extracts the base URL from each dev server (e.g., `http://localhost:3000`)
+2. Appends your route to create the full URL (e.g., `http://localhost:3000/pitchdeck/1`)
+3. Displays both URLs in the terminal output and summary
+4. Color-codes each worktree's output so you can track which port belongs to which branch
 
 **Via command line:**
+
 ```bash
 otree run --all --command "pnpm dev" --route /pitchdeck/1
 ```
@@ -147,6 +199,7 @@ otree run --all --command "pnpm dev" --route /pitchdeck/1
 **Via interactive prompt:**
 
 When you run `otree run` without the `--route` flag, you'll be prompted to select a route:
+
 - Choose from your saved routes
 - Select your default route (if set)
 - Choose "No route" to skip
@@ -155,11 +208,24 @@ When you run `otree run` without the `--route` flag, you'll be prompted to selec
 **Saving routes:**
 
 Just like commands, you can save frequently used routes:
+
 - When entering a custom route, you'll be asked if you want to save it
 - You can set a default route that will be suggested first
 - Manage saved routes via `otree config`
 
-Will display both the base URL and the route URL for each worktree, making it easy to click through to the exact page you're working on in each branch.
+**Example with Cursor multi-agent:**
+
+```bash
+# After Cursor creates worktrees for agents working on a pitchdeck feature:
+otree run --all --command "pnpm dev" --route /pitchdeck/1
+
+# Output shows:
+# [agent-1] → http://localhost:3000/pitchdeck/1
+# [agent-2] → http://localhost:3001/pitchdeck/1
+# [agent-3] → http://localhost:3002/pitchdeck/1
+
+# Click each URL, test the implementations, and identify the best one!
+```
 
 ### Copy Files
 
@@ -193,6 +259,7 @@ otree rm
 ```
 
 **Safety features:**
+
 - The main worktree (first one) is never removed
 - Interactive mode: select which worktrees to remove
 - Confirmation prompt before removal
@@ -206,6 +273,7 @@ otree config
 ```
 
 Manage your worktree configuration:
+
 - **View current configuration**: See all saved commands, routes, and files
 - **Set default command**: Set a command that runs by default
 - **Add saved command**: Add commands to quick-select list
@@ -221,22 +289,10 @@ The tool stores configuration in `.worktree-config.json` in your project root:
 ```json
 {
   "defaultCommand": "pnpm dev",
-  "savedCommands": [
-    "pnpm dev",
-    "pnpm build",
-    "pnpm test"
-  ],
+  "savedCommands": ["pnpm dev", "pnpm build", "pnpm test"],
   "defaultRoute": "/pitchdeck/1",
-  "savedRoutes": [
-    "/pitchdeck/1",
-    "/dashboard",
-    "/settings"
-  ],
-  "filesToCopy": [
-    ".env",
-    ".env.local",
-    "config.json"
-  ]
+  "savedRoutes": ["/pitchdeck/1", "/dashboard", "/settings"],
+  "filesToCopy": [".env", ".env.local", "config.json"]
 }
 ```
 
@@ -304,10 +360,10 @@ otree remove --all
 ## URL Extraction
 
 The tool automatically extracts and displays:
+
 - `http://localhost:XXXX`
 - `https://localhost:XXXX`
 - `http://127.0.0.1:XXXX`
 - Plain `localhost:XXXX` patterns
 
 This makes it easy to see all your running dev servers at a glance!
-
